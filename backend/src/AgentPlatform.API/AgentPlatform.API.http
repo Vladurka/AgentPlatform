@@ -1,0 +1,97 @@
+@host = http://localhost:5202
+@token = {{login.response.body.data.accessToken}}
+
+### Health
+GET {{host}}/health
+Accept: application/json
+
+### Register
+# @name register
+POST {{host}}/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+### Login
+# @name login
+POST {{host}}/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "password123"
+}
+
+### Get Me
+GET {{host}}/api/v1/auth/me
+Authorization: Bearer {{token}}
+
+### Refresh Token
+POST {{host}}/api/v1/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{register.response.body.data.refreshToken}}"
+}
+
+### Create Agent
+# @name createAgent
+POST {{host}}/api/v1/agents
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Support Bot",
+  "description": "Customer support agent for our website",
+  "instructions": "You are a helpful customer support agent. Be polite and concise."
+}
+
+### List My Agents
+GET {{host}}/api/v1/agents
+Authorization: Bearer {{token}}
+
+### Get Agent by ID
+GET {{host}}/api/v1/agents/{{createAgent.response.body.data.id}}
+Authorization: Bearer {{token}}
+
+### Update Agent
+PUT {{host}}/api/v1/agents/{{createAgent.response.body.data.id}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Support Bot v2",
+  "description": "Updated customer support agent",
+  "instructions": "You are a helpful and professional customer support agent."
+}
+
+### Delete Agent
+DELETE {{host}}/api/v1/agents/{{createAgent.response.body.data.id}}
+Authorization: Bearer {{token}}
+
+### Add Knowledge Source
+POST {{host}}/api/v1/agents/{{createAgent.response.body.data.id}}/knowledge
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "type": "text",
+  "content": "Our company was founded in 2020. We sell software products.",
+  "sourceUrl": null
+}
+
+### List Knowledge Sources
+GET {{host}}/api/v1/agents/{{createAgent.response.body.data.id}}/knowledge
+Authorization: Bearer {{token}}
+
+### Widget Chat (no auth required)
+POST {{host}}/api/v1/chat/{{createAgent.response.body.data.embedToken}}/message
+Content-Type: application/json
+
+{
+  "message": "Hello, what does your company do?",
+  "sessionId": null
+}

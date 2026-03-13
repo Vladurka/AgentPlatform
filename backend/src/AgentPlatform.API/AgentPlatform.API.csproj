@@ -1,0 +1,33 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MassTransit.RabbitMQ" Version="8.3.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.4" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Scalar.AspNetCore" Version="2.13.6" />
+    <PackageReference Include="StackExchange.Redis" Version="2.11.8" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AgentPlatform.Shared\AgentPlatform.Shared.csproj" />
+    <ProjectReference Include="..\Modules\Auth\AgentPlatform.Auth.Infrastructure\AgentPlatform.Auth.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Auth\AgentPlatform.Auth.Endpoints\AgentPlatform.Auth.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Agents\AgentPlatform.Agents.Infrastructure\AgentPlatform.Agents.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Agents\AgentPlatform.Agents.Endpoints\AgentPlatform.Agents.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Chat\AgentPlatform.Chat.Infrastructure\AgentPlatform.Chat.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Chat\AgentPlatform.Chat.Endpoints\AgentPlatform.Chat.Endpoints.csproj" />
+    <ProjectReference Include="..\Modules\Billing\AgentPlatform.Billing.Infrastructure\AgentPlatform.Billing.Infrastructure.csproj" />
+    <ProjectReference Include="..\Modules\Billing\AgentPlatform.Billing.Endpoints\AgentPlatform.Billing.Endpoints.csproj" />
+  </ItemGroup>
+
+</Project>

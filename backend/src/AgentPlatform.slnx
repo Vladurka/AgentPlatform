@@ -1,0 +1,29 @@
+<Solution>
+  <Folder Name="/Modules/" />
+  <Folder Name="/Modules/Agents/">
+    <Project Path="Modules/Agents/AgentPlatform.Agents.Application/AgentPlatform.Agents.Application.csproj" />
+    <Project Path="Modules/Agents/AgentPlatform.Agents.Domain/AgentPlatform.Agents.Domain.csproj" />
+    <Project Path="Modules/Agents/AgentPlatform.Agents.Endpoints/AgentPlatform.Agents.Endpoints.csproj" />
+    <Project Path="Modules/Agents/AgentPlatform.Agents.Infrastructure/AgentPlatform.Agents.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Auth/">
+    <Project Path="Modules/Auth/AgentPlatform.Auth.Application/AgentPlatform.Auth.Application.csproj" />
+    <Project Path="Modules/Auth/AgentPlatform.Auth.Domain/AgentPlatform.Auth.Domain.csproj" />
+    <Project Path="Modules/Auth/AgentPlatform.Auth.Endpoints/AgentPlatform.Auth.Endpoints.csproj" />
+    <Project Path="Modules/Auth/AgentPlatform.Auth.Infrastructure/AgentPlatform.Auth.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Billing/">
+    <Project Path="Modules/Billing/AgentPlatform.Billing.Application/AgentPlatform.Billing.Application.csproj" />
+    <Project Path="Modules/Billing/AgentPlatform.Billing.Domain/AgentPlatform.Billing.Domain.csproj" />
+    <Project Path="Modules/Billing/AgentPlatform.Billing.Endpoints/AgentPlatform.Billing.Endpoints.csproj" />
+    <Project Path="Modules/Billing/AgentPlatform.Billing.Infrastructure/AgentPlatform.Billing.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Modules/Chat/">
+    <Project Path="Modules/Chat/AgentPlatform.Chat.Application/AgentPlatform.Chat.Application.csproj" />
+    <Project Path="Modules/Chat/AgentPlatform.Chat.Domain/AgentPlatform.Chat.Domain.csproj" />
+    <Project Path="Modules/Chat/AgentPlatform.Chat.Endpoints/AgentPlatform.Chat.Endpoints.csproj" />
+    <Project Path="Modules/Chat/AgentPlatform.Chat.Infrastructure/AgentPlatform.Chat.Infrastructure.csproj" />
+  </Folder>
+  <Project Path="AgentPlatform.API/AgentPlatform.API.csproj" />
+  <Project Path="AgentPlatform.Shared/AgentPlatform.Shared.csproj" />
+</Solution>
