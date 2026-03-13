@@ -7,7 +7,6 @@ obj/
 *.DotSettings.user
 appsettings.*.json
 !appsettings.json
-!appsettings.Development.json
 
 # Python
 __pycache__/
