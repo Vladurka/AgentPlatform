@@ -62,7 +62,7 @@ AgentPlatform lets you create AI chatbots, feed them your data (URLs, PDFs, text
 ### Prerequisites
 
 - [Docker](https://www.docker.com/) + Docker Compose
-- Stripe account (for billing)
+- Stripe account
 - OpenAI API key
 
 ### 1. Clone the repo
@@ -100,7 +100,7 @@ docker-compose -f docker-compose.dev.yml up
 | Service | URL |
 |---|---|
 | Backend API | http://localhost:5000 |
-| Swagger UI | http://localhost:5000/swagger |
+| Scalar | [http://localhost:5000/swagger](http://localhost:5000/scalar/) |
 | AI Service | http://localhost:8001 |
 | RabbitMQ Management | http://localhost:15672 |
 
