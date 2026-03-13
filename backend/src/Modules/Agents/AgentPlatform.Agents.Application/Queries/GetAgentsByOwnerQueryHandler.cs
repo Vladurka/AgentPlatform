@@ -12,6 +12,7 @@ public class GetAgentsByOwnerQueryHandler(
         var agents = await agentRepository.GetByOwnerIdAsync(request.OwnerId, ct);
         return agents.Select(a => new AgentDto(
             a.Id, a.Name, a.Description, a.Instructions,
-            a.EmbedToken, a.Status.ToString(), a.CreatedAt)).ToList();
+            a.EmbedToken, a.Status.ToString(),
+            a.LlmProvider.ToString(), a.LlmModel.ToString(), a.CreatedAt)).ToList();
     }
 }

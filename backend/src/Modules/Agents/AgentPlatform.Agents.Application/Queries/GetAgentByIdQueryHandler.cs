@@ -17,6 +17,7 @@ public class GetAgentByIdQueryHandler(IAgentRepository agentRepository)
 
         return new AgentDto(
             agent.Id, agent.Name, agent.Description, agent.Instructions,
-            agent.EmbedToken, agent.Status.ToString(), agent.CreatedAt);
+            agent.EmbedToken, agent.Status.ToString(),
+            agent.LlmProvider.ToString(), agent.LlmModel.ToString(), agent.CreatedAt);
     }
 }
