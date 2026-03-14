@@ -1,6 +1,7 @@
 using AgentPlatform.Agents.Application.DTOs;
 using AgentPlatform.Agents.Application.Interfaces;
 using AgentPlatform.Agents.Domain.Entities;
+using AgentPlatform.Shared.Application;
 using AgentPlatform.Shared.Domain;
 using MediatR;
 
@@ -8,7 +9,8 @@ namespace AgentPlatform.Agents.Application.Commands;
 
 public class CreateAgentCommandHandler(
     IAgentRepository agentRepository,
-    IUnitOfWork unitOfWork) : IRequestHandler<CreateAgentCommand, AgentDto>
+    IUnitOfWork unitOfWork,
+    IEncryptionService encryption) : IRequestHandler<CreateAgentCommand, AgentDto>
 {
     private static readonly Dictionary<string, int> AgentLimits = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -30,7 +32,10 @@ public class CreateAgentCommandHandler(
             Name = request.Name,
             Description = request.Description,
             Instructions = request.Instructions,
-            OwnerId = request.OwnerId
+            OwnerId = request.OwnerId,
+            LlmProvider = request.LlmProvider,
+            LlmModel = request.LlmModel,
+            ApiKeyEncrypted = encryption.Encrypt(request.ApiKey)
         };
 
         await agentRepository.AddAsync(agent, ct);
@@ -38,6 +43,7 @@ public class CreateAgentCommandHandler(
 
         return new AgentDto(
             agent.Id, agent.Name, agent.Description, agent.Instructions,
-            agent.EmbedToken, agent.Status.ToString(), agent.CreatedAt);
+            agent.EmbedToken, agent.Status.ToString(),
+            agent.LlmProvider.ToString(), agent.LlmModel.ToString(), agent.CreatedAt);
     }
 }

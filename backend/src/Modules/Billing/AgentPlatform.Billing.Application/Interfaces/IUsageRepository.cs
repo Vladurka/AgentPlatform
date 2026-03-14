@@ -6,4 +6,5 @@ namespace AgentPlatform.Billing.Application.Interfaces;
 public interface IUsageRepository : IRepository<UsageRecord>
 {
     Task<UsageRecord?> GetCurrentMonthAsync(Guid userId, CancellationToken ct = default);
+    Task IncrementMessageCountAsync(Guid userId, CancellationToken ct = default);
 }

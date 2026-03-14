@@ -4,8 +4,8 @@ public interface IAiServiceClient
 {
     Task<ChatCompletionResult> SendMessageAsync(
         Guid agentId, string sessionId, string message,
-        string instructions, List<MessageHistory> history,
-        CancellationToken ct = default);
+        string instructions, string llmProvider, string llmModel, string apiKey,
+        List<MessageHistory> history, CancellationToken ct = default);
 }
 
 public record ChatCompletionResult(string Answer, List<string> Sources, int TokensUsed);

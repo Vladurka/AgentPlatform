@@ -108,6 +108,11 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
+});
+
 var app = builder.Build();
 
 // Auto-migrate on startup

@@ -32,7 +32,8 @@ public class SendMessageCommandHandler(
             .ToList();
 
         var result = await aiServiceClient.SendMessageAsync(
-            request.AgentId, sessionId, request.Message, request.AgentInstructions, history, ct);
+            request.AgentId, sessionId, request.Message, request.AgentInstructions,
+            request.LlmProvider, request.LlmModel, request.ApiKey, history, ct);
 
         conversation.Messages.Add(new ChatMessage { Role = "user", Content = request.Message });
         conversation.Messages.Add(new ChatMessage { Role = "assistant", Content = result.Answer });

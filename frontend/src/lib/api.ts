@@ -51,6 +51,7 @@ export interface Agent {
   id: string;
   name: string;
   description: string;
+  instructions: string;
   embedToken: string;
   status: 'Active' | 'Inactive' | 'Training';
   llmProvider: LlmProvider;

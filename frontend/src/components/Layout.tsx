@@ -47,7 +47,7 @@ export default function Layout() {
   const msgPct = Math.min(100, Math.round((msgUsed / msgLimit) * 100));
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden">
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#0F0F13' }}>
       {/* ── Sidebar ── */}
       <aside className="w-64 flex-shrink-0 bg-slate-900 flex flex-col">
         {/* Logo */}
@@ -55,13 +55,13 @@ export default function Layout() {
           <div className="w-8 h-8 rounded-lg bg-violet-600 flex items-center justify-center flex-shrink-0">
             <Bot className="w-4.5 h-4.5 text-white" size={18} />
           </div>
-          <span className="text-white font-semibold text-base tracking-tight">AgentPlatform</span>
+          <span className="text-white font-semibold text-base tracking-tight">AgentForge</span>
         </div>
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-0.5">
           <NavLink
-            to="/"
+            to="/dashboard"
             end
             className={({ isActive }) =>
               clsx(

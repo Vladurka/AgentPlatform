@@ -30,14 +30,16 @@ public static class AgentEndpoints
         group.MapPost("/", async (CreateAgentRequest request, ICurrentUser currentUser, IMediator mediator) =>
         {
             var result = await mediator.Send(new CreateAgentCommand(
-                currentUser.UserId, currentUser.Plan, request.Name, request.Description, request.Instructions));
+                currentUser.UserId, currentUser.Plan, request.Name, request.Description, request.Instructions,
+                request.LlmProvider, request.LlmModel, request.ApiKey));
             return Results.Created($"/api/v1/agents/{result.Id}", ApiResponse<AgentDto>.Success(result));
         });
 
         group.MapPut("/{id:guid}", async (Guid id, UpdateAgentRequest request, ICurrentUser currentUser, IMediator mediator) =>
         {
             var result = await mediator.Send(new UpdateAgentCommand(
-                id, currentUser.UserId, request.Name, request.Description, request.Instructions));
+                id, currentUser.UserId, request.Name, request.Description, request.Instructions,
+                request.LlmProvider, request.LlmModel, request.ApiKey));
             return Results.Ok(ApiResponse<AgentDto>.Success(result));
         });
 

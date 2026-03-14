@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AgentPlatform.Agents.Application.Interfaces;
 using AgentPlatform.Chat.Application.Commands;
 using AgentPlatform.Chat.Application.DTOs;
@@ -12,6 +13,8 @@ namespace AgentPlatform.Chat.Endpoints;
 
 public static class ChatEndpoints
 {
+    private record AgentCache(string AgentId, string Instructions, string LlmProvider, string LlmModel, string ApiKeyEncrypted);
+
     public static IEndpointRouteBuilder MapChatEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/v1/chat").WithTags("Chat");
@@ -21,10 +24,10 @@ public static class ChatEndpoints
             SendMessageRequest request,
             IMediator mediator,
             IAgentRepository agentRepository,
+            IEncryptionService encryption,
             IConnectionMultiplexer redis,
             CancellationToken ct) =>
         {
-            // Rate limit: 100 req/min per embed token (batch INCR+EXPIRE to prevent TTL-less keys on crash)
             var db = redis.GetDatabase();
             var rateLimitKey = $"rl:chat:{token}";
             var batch = db.CreateBatch();
@@ -36,17 +39,25 @@ public static class ChatEndpoints
             if (count > 100)
                 return Results.Json(ApiResponse<ChatResponse>.Fail("Rate limit exceeded"), statusCode: 429);
 
-            // Resolve agent from embed token (Redis cache → DB fallback)
             var cacheKey = $"agent:token:{token}";
             Guid agentId;
-            string instructions;
+            string instructions, llmProvider, llmModel, apiKey;
 
+            AgentCache? cached = null;
             var cachedValue = await db.StringGetAsync(cacheKey);
             if (cachedValue.HasValue)
             {
-                var parts = ((string)cachedValue!).Split('|', 2);
-                agentId = Guid.Parse(parts[0]);
-                instructions = parts.Length > 1 ? parts[1] : string.Empty;
+                try { cached = JsonSerializer.Deserialize<AgentCache>((string)cachedValue!); }
+                catch { /* stale cache — fall through to DB */ }
+            }
+
+            if (cached is not null)
+            {
+                agentId = Guid.Parse(cached.AgentId);
+                instructions = cached.Instructions;
+                llmProvider = cached.LlmProvider;
+                llmModel = cached.LlmModel;
+                apiKey = encryption.Decrypt(cached.ApiKeyEncrypted);
             }
             else
             {
@@ -55,12 +66,17 @@ public static class ChatEndpoints
                     return Results.NotFound(ApiResponse<ChatResponse>.Fail("Agent not found"));
 
                 agentId = agent.Id;
-                instructions = agent.Instructions ?? string.Empty;
-                await db.StringSetAsync(cacheKey, $"{agentId}|{instructions}", TimeSpan.FromMinutes(10));
+                instructions = agent.Instructions;
+                llmProvider = agent.LlmProvider.ToString();
+                llmModel = agent.LlmModel.ToString();
+                apiKey = encryption.Decrypt(agent.ApiKeyEncrypted);
+
+                var cacheEntry = new AgentCache(agentId.ToString(), instructions, llmProvider, llmModel, agent.ApiKeyEncrypted);
+                await db.StringSetAsync(cacheKey, JsonSerializer.Serialize(cacheEntry), TimeSpan.FromMinutes(10));
             }
 
             var result = await mediator.Send(
-                new SendMessageCommand(agentId, instructions, request.Message, request.SessionId), ct);
+                new SendMessageCommand(agentId, instructions, llmProvider, llmModel, apiKey, request.Message, request.SessionId), ct);
 
             return Results.Ok(ApiResponse<ChatResponse>.Success(result));
         }).AllowAnonymous();

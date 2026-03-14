@@ -17,8 +17,8 @@ public class AiServiceClient : IAiServiceClient
 
     public async Task<ChatCompletionResult> SendMessageAsync(
         Guid agentId, string sessionId, string message,
-        string instructions, List<MessageHistory> history,
-        CancellationToken ct = default)
+        string instructions, string llmProvider, string llmModel, string apiKey,
+        List<MessageHistory> history, CancellationToken ct = default)
     {
         var request = new
         {
@@ -26,6 +26,9 @@ public class AiServiceClient : IAiServiceClient
             session_id = sessionId,
             message,
             instructions,
+            llm_provider = llmProvider,
+            llm_model = llmModel,
+            api_key = apiKey,
             history = history.Select(h => new { role = h.Role, content = h.Content })
         };
 

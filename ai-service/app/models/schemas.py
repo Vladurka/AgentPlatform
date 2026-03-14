@@ -12,7 +12,10 @@ class ChatRequest(BaseModel):
     session_id: str
     message: str
     history: list[MessageHistory] = []
-    instructions: str = ""  # system prompt from .NET backend
+    instructions: str = ""
+    llm_provider: str = "OpenAi"
+    llm_model: str = "Gpt4oMini"
+    api_key: str = ""
 
 
 class ChatResponse(BaseModel):

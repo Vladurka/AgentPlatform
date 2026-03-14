@@ -1,5 +1,7 @@
 using AgentPlatform.Agents.Application.Interfaces;
 using AgentPlatform.Agents.Infrastructure.Repositories;
+using AgentPlatform.Agents.Infrastructure.Services;
+using AgentPlatform.Shared.Application;
 using AgentPlatform.Shared.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,6 +17,7 @@ public class AgentsModuleRegistration : IModuleRegistration
 
         services.AddScoped<IAgentRepository, AgentRepository>();
         services.AddScoped<IKnowledgeSourceRepository, KnowledgeSourceRepository>();
+        services.AddSingleton<IEncryptionService, AesEncryptionService>();
 
         return services;
     }

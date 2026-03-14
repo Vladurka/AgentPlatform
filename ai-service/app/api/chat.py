@@ -13,5 +13,8 @@ async def chat(request: ChatRequest):
         question=request.message,
         history=request.history,
         instructions=request.instructions,
+        llm_provider=request.llm_provider,
+        llm_model=request.llm_model,
+        api_key=request.api_key,
     )
     return ChatResponse(**result)

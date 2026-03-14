@@ -1,11 +1,8 @@
-import { useState, type FormEvent, useEffect } from 'react';
+import { useState, type FormEvent, type CSSProperties, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Copy, CheckCheck, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
-import clsx from 'clsx';
+import { ArrowLeft, Copy, CheckCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { agentsApi, LlmProvider, LlmModel } from '../lib/api';
-
-// ─── Provider / Model config ──────────────────────────────────────────────────
 
 const PROVIDERS = [
   { value: LlmProvider.OpenAi, label: 'OpenAI' },
@@ -28,16 +25,54 @@ const MODELS_BY_PROVIDER: Record<number, { value: LlmModel; label: string }[]> =
   ],
 };
 
-const inputCls =
-  'w-full bg-white border border-slate-200 text-slate-800 placeholder-slate-400 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent transition';
+const inputStyle: CSSProperties = {
+  backgroundColor: '#13131C',
+  border: '1px solid #FFFFFF14',
+  borderRadius: '10px',
+  color: '#E2E2F0',
+  fontFamily: '"Inter", system-ui, sans-serif',
+  fontSize: '14px',
+  outline: 'none',
+  padding: '11px 14px',
+  width: '100%',
+  boxSizing: 'border-box',
+};
 
-const labelCls = 'block text-xs font-medium text-slate-600 mb-1.5';
+const labelStyle: CSSProperties = {
+  color: '#8888AA',
+  display: 'block',
+  fontSize: '12px',
+  fontWeight: 500,
+  marginBottom: '6px',
+};
 
-// ─── Embed code component ─────────────────────────────────────────────────────
+const cardStyle: CSSProperties = {
+  backgroundColor: '#18181FE6',
+  border: '1px solid #FFFFFF14',
+  borderRadius: '16px',
+  padding: '24px',
+};
 
-function EmbedCode({ embedToken }: { embedToken: string }) {
+const selectStyle: CSSProperties = {
+  ...inputStyle,
+  appearance: 'none',
+  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238888AA' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
+  backgroundRepeat: 'no-repeat',
+  backgroundPosition: 'right 12px center',
+  cursor: 'pointer',
+  paddingRight: '36px',
+};
+
+function focusInput(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+  e.target.style.borderColor = '#7C3AED80';
+}
+function blurInput(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) {
+  e.target.style.borderColor = '#FFFFFF14';
+}
+
+function EmbedCode({ embedToken, agentName }: { embedToken: string; agentName: string }) {
   const [copied, setCopied] = useState(false);
-  const snippet = `<script src="https://cdn.agentplatform.io/widget.js" data-token="${embedToken}"></script>`;
+  const snippet = `<script src="https://cdn.agentforge.ai/widget.js" data-token="${embedToken}" data-name="${agentName}"></script>`;
 
   function copy() {
     navigator.clipboard.writeText(snippet).then(() => {
@@ -47,40 +82,31 @@ function EmbedCode({ embedToken }: { embedToken: string }) {
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5">
-      <div className="flex items-center justify-between mb-3">
+    <div style={cardStyle}>
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
         <div>
-          <h2 className="text-sm font-semibold text-slate-700">Embed Code</h2>
-          <p className="text-xs text-slate-400 mt-0.5">Paste this into your website's HTML</p>
+          <h2 style={{ color: '#E2E2F0', fontSize: '14px', fontWeight: 600, margin: 0 }}>Embed Code</h2>
+          <p style={{ color: '#8888AA', fontSize: '12px', margin: '4px 0 0' }}>Paste this into your website's HTML</p>
         </div>
-        <button
-          onClick={copy}
-          className={clsx(
-            'flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg transition-colors',
-            copied
-              ? 'bg-emerald-100 text-emerald-700'
-              : 'bg-slate-100 hover:bg-slate-200 text-slate-600'
-          )}
+        <button onClick={copy}
+          style={{ alignItems: 'center', backgroundColor: copied ? '#22C55E26' : '#FFFFFF0A', border: `1px solid ${copied ? '#22C55E33' : '#FFFFFF14'}`, borderRadius: '8px', color: copied ? '#22C55E' : '#8888AA', cursor: 'pointer', display: 'flex', fontSize: '12px', fontWeight: 500, gap: '6px', padding: '7px 14px', transition: 'all 0.15s' }}
         >
           {copied ? <CheckCheck size={13} /> : <Copy size={13} />}
           {copied ? 'Copied!' : 'Copy'}
         </button>
       </div>
-      <pre className="bg-slate-950 text-slate-200 text-xs rounded-lg px-4 py-3 overflow-x-auto font-mono leading-relaxed">
+      <pre style={{ backgroundColor: '#0A0A0F', border: '1px solid #FFFFFF0A', borderRadius: '10px', color: '#A78BFA', fontFamily: 'monospace', fontSize: '12px', lineHeight: '1.6', margin: 0, overflow: 'auto', padding: '14px 16px', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
         {snippet}
       </pre>
-      <div className="mt-3 flex items-start gap-2 bg-violet-50 border border-violet-100 rounded-lg px-3 py-2.5">
-        <span className="text-violet-400 text-xs mt-0.5">ℹ</span>
-        <p className="text-xs text-violet-700">
-          Place this script tag just before the closing <code className="bg-violet-100 px-1 py-0.5 rounded text-[11px]">&lt;/body&gt;</code> tag.
-          The widget will automatically appear on your page.
+      <div style={{ alignItems: 'flex-start', backgroundColor: '#7C3AED14', border: '1px solid #7C3AED26', borderRadius: '10px', display: 'flex', fontSize: '12px', gap: '8px', marginTop: '12px', padding: '10px 14px' }}>
+        <span style={{ color: '#A78BFA', flexShrink: 0 }}>ℹ</span>
+        <p style={{ color: '#8888AA', margin: 0 }}>
+          Place this script tag just before the closing <code style={{ backgroundColor: '#7C3AED26', borderRadius: '4px', color: '#A78BFA', padding: '1px 5px' }}>&lt;/body&gt;</code> tag.
         </p>
       </div>
     </div>
   );
 }
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AgentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -95,7 +121,6 @@ export default function AgentDetail() {
 
   const agent = agents?.find((a) => a.id === id);
 
-  // Form state
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [instructions, setInstructions] = useState('');
@@ -106,13 +131,28 @@ export default function AgentDetail() {
   const [success, setSuccess] = useState(false);
   const [hydrated, setHydrated] = useState(false);
 
-  // Hydrate form when agent loads
   useEffect(() => {
     if (agent && !hydrated) {
+      const providerMap: Record<string, LlmProvider> = {
+        OpenAi: LlmProvider.OpenAi,
+        Anthropic: LlmProvider.Anthropic,
+        Gemini: LlmProvider.Gemini,
+      };
+      const modelMap: Record<string, LlmModel> = {
+        Gpt4o: LlmModel.Gpt4o,
+        Gpt4oMini: LlmModel.Gpt4oMini,
+        Claude35Sonnet: LlmModel.Claude35Sonnet,
+        Claude3Haiku: LlmModel.Claude3Haiku,
+        Gemini15Pro: LlmModel.Gemini15Pro,
+        Gemini15Flash: LlmModel.Gemini15Flash,
+      };
+      const providerStr = agent.llmProvider as unknown as string;
+      const modelStr = agent.llmModel as unknown as string;
       setName(agent.name);
       setDescription(agent.description ?? '');
-      setProvider(agent.llmProvider);
-      setModel(agent.llmModel);
+      setInstructions(agent.instructions ?? '');
+      setProvider(providerMap[providerStr] ?? LlmProvider.OpenAi);
+      setModel(modelMap[modelStr] ?? LlmModel.Gpt4o);
       setHydrated(true);
     }
   }, [agent, hydrated]);
@@ -126,8 +166,7 @@ export default function AgentDetail() {
   const updateMutation = useMutation({
     mutationFn: () =>
       agentsApi.update(id!, {
-        name,
-        description,
+        name, description,
         instructions: instructions || undefined,
         llmProvider: provider,
         llmModel: model,
@@ -154,193 +193,155 @@ export default function AgentDetail() {
     updateMutation.mutate();
   }
 
-  // ── Loading / error states ──────────────────────────────────────────────────
+  const bgOrbs = (
+    <div style={{ bottom: 0, left: 0, pointerEvents: 'none', position: 'fixed', right: 0, top: 0, zIndex: 0 }}>
+      <div style={{ backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50% in oklab, oklab(54.1% 0.096 -0.227 / 22%) 0%, oklab(0% 0 -.0001 / 0%) 70%)', borderRadius: '50%', filter: 'blur(80px)', height: '700px', left: '-100px', position: 'absolute', top: '-200px', width: '700px' }} />
+      <div style={{ backgroundImage: 'radial-gradient(circle farthest-corner at 50% 50% in oklab, oklab(49.1% 0.093 -0.223 / 15%) 0%, oklab(0% 0 -.0001 / 0%) 70%)', borderRadius: '50%', bottom: '-150px', filter: 'blur(70px)', height: '500px', position: 'absolute', right: '200px', width: '500px' }} />
+    </div>
+  );
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-24 text-slate-400">
-        <Loader2 size={24} className="animate-spin mr-2" />
-        Loading agent…
+      <div style={{ alignItems: 'center', color: '#8888AA', display: 'flex', fontFamily: '"Inter", system-ui, sans-serif', gap: '10px', justifyContent: 'center', minHeight: '100%', padding: '80px' }}>
+        <Loader2 size={20} style={{ animation: 'spin 1s linear infinite' }} /> Loading agent…
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
   }
 
   if (isError || (!isLoading && !agent)) {
     return (
-      <div className="px-8 py-8 max-w-2xl mx-auto">
-        <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-6 transition-colors">
-          <ArrowLeft size={14} /> Back to Dashboard
-        </Link>
-        <div className="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-5 py-4 text-sm text-red-600">
-          <AlertCircle size={16} />
-          Agent not found or failed to load.
+      <div style={{ fontFamily: '"Inter", system-ui, sans-serif', padding: '40px 48px', position: 'relative' }}>
+        {bgOrbs}
+        <div style={{ maxWidth: '680px', position: 'relative', zIndex: 1 }}>
+          <Link to="/dashboard" style={{ alignItems: 'center', color: '#8888AA', display: 'inline-flex', fontSize: '13px', gap: '6px', marginBottom: '24px', textDecoration: 'none' }}>
+            <ArrowLeft size={14} /> Back
+          </Link>
+          <div style={{ alignItems: 'center', backgroundColor: '#2D1515', border: '1px solid #7F1D1D', borderRadius: '12px', color: '#FCA5A5', display: 'flex', fontSize: '14px', gap: '10px', padding: '16px 20px' }}>
+            <AlertCircle size={16} /> Agent not found or failed to load.
+          </div>
         </div>
       </div>
     );
   }
 
+  const statusColors: Record<string, { color: string; bg: string; border: string }> = {
+    Active: { color: '#22C55E', bg: '#22C55E1F', border: '#22C55E33' },
+    Inactive: { color: '#8888AA', bg: '#8888AA1F', border: '#8888AA33' },
+    Training: { color: '#F59E0B', bg: '#F59E0B1F', border: '#F59E0B33' },
+  };
+  const sc = statusColors[agent!.status] ?? statusColors['Inactive'];
+
   return (
-    <div className="px-8 py-8 max-w-2xl mx-auto">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 mb-6 transition-colors"
-      >
-        <ArrowLeft size={14} />
-        Back to Dashboard
-      </Link>
+    <div style={{ fontFamily: '"Inter", system-ui, sans-serif', minHeight: '100%', padding: '40px 48px', position: 'relative' }}>
+      {bgOrbs}
 
-      <div className="flex items-center gap-3 mb-1">
-        <h1 className="text-2xl font-bold text-slate-800">{agent!.name}</h1>
-        <span
-          className={clsx(
-            'text-xs font-medium px-2 py-0.5 rounded-full border',
-            agent!.status === 'Active'
-              ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
-              : agent!.status === 'Training'
-              ? 'bg-amber-100 text-amber-700 border-amber-200'
-              : 'bg-slate-100 text-slate-500 border-slate-200'
-          )}
+      <div style={{ maxWidth: '680px', position: 'relative', zIndex: 1 }}>
+        <Link to="/dashboard" style={{ alignItems: 'center', color: '#8888AA', display: 'inline-flex', fontSize: '13px', gap: '6px', marginBottom: '24px', textDecoration: 'none', transition: 'color 0.15s' }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = '#E2E2F0')}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLAnchorElement).style.color = '#8888AA')}
         >
-          {agent!.status}
-        </span>
-      </div>
-      <p className="text-sm text-slate-500 mb-8">
-        Created {new Date(agent!.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
-      </p>
+          <ArrowLeft size={14} /> Back to Dashboard
+        </Link>
 
-      {/* Embed code — show at top so users can grab it quickly */}
-      <div className="mb-6">
-        <EmbedCode embedToken={agent!.embedToken} />
-      </div>
-
-      {/* Edit form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {error && (
-          <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-lg px-3 py-2.5 text-sm text-red-600">
-            <AlertCircle size={15} className="flex-shrink-0 mt-0.5" />
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2.5 text-sm text-emerald-700">
-            <CheckCircle2 size={15} />
-            Agent updated successfully.
-          </div>
-        )}
-
-        {/* Basic info */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-700">Basic Information</h2>
-
-          <div>
-            <label className={labelCls}>Agent name <span className="text-red-500">*</span></label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              placeholder="e.g. Support Bot"
-              className={inputCls}
-            />
-          </div>
-
-          <div>
-            <label className={labelCls}>Description</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Short description"
-              className={inputCls}
-            />
-          </div>
-
-          <div>
-            <label className={labelCls}>System instructions</label>
-            <textarea
-              value={instructions}
-              onChange={(e) => setInstructions(e.target.value)}
-              rows={5}
-              placeholder="Leave blank to keep current instructions…"
-              className={clsx(inputCls, 'resize-y min-h-[100px]')}
-            />
-            <p className="text-xs text-slate-400 mt-1">Leave blank to keep existing instructions unchanged.</p>
+        <div style={{ alignItems: 'center', display: 'flex', gap: '12px', marginBottom: '6px' }}>
+          <h1 style={{ color: '#E2E2F0', fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>{agent!.name}</h1>
+          <div style={{ backgroundColor: sc.bg, border: `1px solid ${sc.border}`, borderRadius: '20px', paddingBlock: '3px', paddingInline: '10px' }}>
+            <span style={{ color: sc.color, fontSize: '11px', fontWeight: 600 }}>{agent!.status}</span>
           </div>
         </div>
+        <p style={{ color: '#8888AA', fontSize: '13px', margin: '0 0 32px' }}>
+          Created {new Date(agent!.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
 
-        {/* Model config */}
-        <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4">
-          <h2 className="text-sm font-semibold text-slate-700">Model Configuration</h2>
+        <div style={{ marginBottom: '20px' }}>
+          <EmbedCode embedToken={agent!.embedToken} agentName={agent!.name} />
+        </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className={labelCls}>Provider</label>
-              <select
-                value={provider}
-                onChange={(e) => handleProviderChange(Number(e.target.value) as LlmProvider)}
-                className={inputCls}
-              >
-                {PROVIDERS.map((p) => (
-                  <option key={p.value} value={p.value}>{p.label}</option>
-                ))}
-              </select>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          {error && (
+            <div style={{ alignItems: 'flex-start', backgroundColor: '#2D1515', border: '1px solid #7F1D1D', borderRadius: '10px', color: '#FCA5A5', display: 'flex', fontSize: '13px', gap: '8px', padding: '12px 14px' }}>
+              <AlertCircle size={15} style={{ flexShrink: 0, marginTop: '1px' }} /> {error}
             </div>
+          )}
+          {success && (
+            <div style={{ alignItems: 'center', backgroundColor: '#14301F', border: '1px solid #166534', borderRadius: '10px', color: '#86EFAC', display: 'flex', fontSize: '13px', gap: '8px', padding: '12px 14px' }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><polyline points="9 12 11 14 15 10" /></svg>
+              Agent updated successfully.
+            </div>
+          )}
 
-            <div>
-              <label className={labelCls}>Model</label>
-              <select
-                value={model}
-                onChange={(e) => setModel(Number(e.target.value) as LlmModel)}
-                className={inputCls}
-              >
-                {(MODELS_BY_PROVIDER[provider] ?? []).map((m) => (
-                  <option key={m.value} value={m.value}>{m.label}</option>
-                ))}
-              </select>
+          <div style={cardStyle}>
+            <h2 style={{ color: '#E2E2F0', fontSize: '14px', fontWeight: 600, margin: '0 0 20px' }}>Basic Information</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={labelStyle}>Agent name <span style={{ color: '#7C3AED' }}>*</span></label>
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} required placeholder="e.g. Support Bot"
+                  style={inputStyle} onFocus={focusInput} onBlur={blurInput} />
+              </div>
+              <div>
+                <label style={labelStyle}>Description</label>
+                <input type="text" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Short description"
+                  style={inputStyle} onFocus={focusInput} onBlur={blurInput} />
+              </div>
+              <div>
+                <label style={labelStyle}>System instructions</label>
+                <textarea value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={5}
+                  placeholder="Leave blank to keep current instructions…"
+                  style={{ ...inputStyle, resize: 'vertical', minHeight: '100px', lineHeight: '1.5' }}
+                  onFocus={focusInput} onBlur={blurInput} />
+                <p style={{ color: '#44445A', fontSize: '11px', margin: '6px 0 0' }}>Leave blank to keep existing instructions unchanged.</p>
+              </div>
             </div>
           </div>
 
-          <div>
-            <label className={labelCls}>New API Key</label>
-            <input
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Leave blank to keep existing key"
-              autoComplete="off"
-              className={inputCls}
-            />
-            <p className="text-xs text-slate-400 mt-1">Only fill this if you want to rotate your API key.</p>
+          <div style={cardStyle}>
+            <h2 style={{ color: '#E2E2F0', fontSize: '14px', fontWeight: 600, margin: '0 0 20px' }}>Model Configuration</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'grid', gap: '16px', gridTemplateColumns: '1fr 1fr' }}>
+                <div>
+                  <label style={labelStyle}>Provider</label>
+                  <select value={provider} onChange={(e) => handleProviderChange(Number(e.target.value) as LlmProvider)}
+                    style={selectStyle} onFocus={focusInput} onBlur={blurInput}>
+                    {PROVIDERS.map((p) => <option key={p.value} value={p.value} style={{ backgroundColor: '#1E1E27' }}>{p.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Model</label>
+                  <select value={model} onChange={(e) => setModel(Number(e.target.value) as LlmModel)}
+                    style={selectStyle} onFocus={focusInput} onBlur={blurInput}>
+                    {MODELS_BY_PROVIDER[provider].map((p) => <option key={p.value} value={p.value} style={{ backgroundColor: '#1E1E27' }}>{p.label}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label style={labelStyle}>New API Key</label>
+                <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} placeholder="Leave blank to keep existing key" autoComplete="off"
+                  style={inputStyle} onFocus={focusInput} onBlur={blurInput} />
+                <p style={{ color: '#44445A', fontSize: '11px', margin: '6px 0 0' }}>Only fill this if you want to rotate your API key.</p>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            type="submit"
-            disabled={updateMutation.isPending}
-            className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-medium text-sm px-5 py-2.5 rounded-lg transition-colors"
-          >
-            {updateMutation.isPending ? (
-              <>
-                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Saving…
-              </>
-            ) : (
-              <>
-                <CheckCircle2 size={15} />
-                Save Changes
-              </>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="text-sm text-slate-500 hover:text-slate-700 transition-colors px-3 py-2.5"
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
+          <div style={{ alignItems: 'center', display: 'flex', gap: '12px' }}>
+            <button type="submit" disabled={updateMutation.isPending}
+              style={{ alignItems: 'center', backgroundImage: updateMutation.isPending ? 'none' : 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)', backgroundColor: updateMutation.isPending ? '#3D2B6D' : undefined, border: 'none', borderRadius: '10px', boxShadow: updateMutation.isPending ? 'none' : '#7C3AED59 0px 0px 20px', color: '#FFFFFF', cursor: updateMutation.isPending ? 'not-allowed' : 'pointer', display: 'flex', fontSize: '14px', fontWeight: 600, gap: '8px', opacity: updateMutation.isPending ? 0.7 : 1, padding: '11px 24px' }}
+            >
+              {updateMutation.isPending ? (
+                <><span style={{ animation: 'spin 1s linear infinite', border: '2px solid #FFFFFF40', borderRadius: '50%', borderTopColor: '#FFFFFF', display: 'inline-block', height: '14px', width: '14px' }} /> Saving…</>
+              ) : 'Save Changes'}
+            </button>
+            <button type="button" onClick={() => navigate('/dashboard')}
+              style={{ background: 'none', border: 'none', color: '#8888AA', cursor: 'pointer', fontSize: '14px', padding: '11px 16px', transition: 'color 0.15s' }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.color = '#E2E2F0')}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.color = '#8888AA')}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
