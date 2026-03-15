@@ -224,7 +224,7 @@ export default function Landing() {
             </div>
             <pre style={{ color: '#A78BFA', fontFamily: '"JetBrains Mono", "Fira Code", monospace', fontSize: '14px', lineHeight: '1.7', margin: 0, overflow: 'auto', padding: '24px 28px' }}>
 {`<script
-  src="https://cdn.agentforge.ai/widget.js"
+  src="https://agent-forge.duckdns.org/widget.js"
   data-token="YOUR_EMBED_TOKEN"
   data-name="Support Agent"
 ></script>`}

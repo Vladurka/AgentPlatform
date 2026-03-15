@@ -72,7 +72,7 @@ function blurInput(e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement | 
 
 function EmbedCode({ embedToken, agentName }: { embedToken: string; agentName: string }) {
   const [copied, setCopied] = useState(false);
-  const snippet = `<script src="https://cdn.agentforge.ai/widget.js" data-token="${embedToken}" data-name="${agentName}"></script>`;
+  const snippet = `<script src="${window.location.origin}/widget.js" data-token="${embedToken}" data-name="${agentName}"></script>`;
 
   function copy() {
     navigator.clipboard.writeText(snippet).then(() => {

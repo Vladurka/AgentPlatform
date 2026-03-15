@@ -53,7 +53,7 @@ function StatusDot({ status }: { status: string }) {
 function CopyEmbedButton({ token }: { token: string }) {
   const [copied, setCopied] = useState(false);
   function copy() {
-    const snippet = `<script src="https://cdn.agentforge.ai/widget.js" data-token="${token}"></script>`;
+    const snippet = `<script src="${window.location.origin}/widget.js" data-token="${token}"></script>`;
     navigator.clipboard.writeText(snippet).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
