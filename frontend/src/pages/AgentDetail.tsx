@@ -1,8 +1,8 @@
-import { useState, type FormEvent, type CSSProperties, useEffect } from 'react';
+import { useState, useRef, type FormEvent, type CSSProperties, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Copy, CheckCheck, AlertCircle, Loader2 } from 'lucide-react';
-import { agentsApi, LlmProvider, LlmModel } from '../lib/api';
+import { ArrowLeft, Copy, CheckCheck, AlertCircle, Loader2, Plus, Globe, FileText, MessageSquare, FileUp, Trash2 } from 'lucide-react';
+import { agentsApi, knowledgeApi, LlmProvider, LlmModel } from '../lib/api';
 
 const PROVIDERS = [
   { value: LlmProvider.OpenAi, label: 'OpenAI' },
@@ -104,6 +104,171 @@ function EmbedCode({ embedToken, agentName }: { embedToken: string; agentName: s
           Place this script tag just before the closing <code style={{ backgroundColor: '#7C3AED26', borderRadius: '4px', color: '#A78BFA', padding: '1px 5px' }}>&lt;/body&gt;</code> tag.
         </p>
       </div>
+    </div>
+  );
+}
+
+const SOURCE_TYPES = [
+  { value: 'url', label: 'Website URL', icon: Globe, placeholder: 'https://example.com/docs' },
+  { value: 'text', label: 'Raw Text', icon: FileText, placeholder: 'Paste your text content here…' },
+  { value: 'faq', label: 'FAQ', icon: MessageSquare, placeholder: 'Q: Question?\nA: Answer.\n\nQ: Another?\nA: Answer.' },
+  { value: 'pdf', label: 'PDF File', icon: FileUp, placeholder: '' },
+];
+
+const STATUS_CFG: Record<string, { color: string; bg: string; label: string }> = {
+  pending: { color: '#F59E0B', bg: '#F59E0B1F', label: 'Pending' },
+  processing: { color: '#0EA5E9', bg: '#0EA5E91F', label: 'Processing' },
+  ready: { color: '#22C55E', bg: '#22C55E1F', label: 'Ready' },
+  failed: { color: '#EF4444', bg: '#EF44441F', label: 'Failed' },
+};
+
+function KnowledgeSources({ agentId }: { agentId: string }) {
+  const queryClient = useQueryClient();
+  const [showForm, setShowForm] = useState(false);
+  const [sourceType, setSourceType] = useState('url');
+  const [content, setContent] = useState('');
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { data: sources = [] } = useQuery({
+    queryKey: ['knowledge', agentId],
+    queryFn: () => knowledgeApi.list(agentId),
+    staleTime: 15_000,
+  });
+
+  const addMutation = useMutation({
+    mutationFn: async () => {
+      if (sourceType === 'url') {
+        return knowledgeApi.add(agentId, { type: 'url', sourceUrl: content });
+      }
+      if (sourceType === 'pdf' && pdfFile) {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve((reader.result as string).split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(pdfFile);
+        });
+        return knowledgeApi.add(agentId, { type: 'pdf', content: base64 });
+      }
+      return knowledgeApi.add(agentId, { type: sourceType, content });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['knowledge', agentId] });
+      setContent('');
+      setPdfFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      setShowForm(false);
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (sourceId: string) => knowledgeApi.remove(agentId, sourceId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['knowledge', agentId] }),
+  });
+
+  const typeInfo = SOURCE_TYPES.find((t) => t.value === sourceType)!;
+  const canSubmit = sourceType === 'pdf' ? !!pdfFile : !!content.trim();
+
+  return (
+    <div style={cardStyle}>
+      <div style={{ alignItems: 'center', display: 'flex', justifyContent: 'space-between', marginBottom: sources.length > 0 || showForm ? '16px' : '0' }}>
+        <div>
+          <h2 style={{ color: '#E2E2F0', fontSize: '14px', fontWeight: 600, margin: 0 }}>Knowledge Sources</h2>
+          <p style={{ color: '#8888AA', fontSize: '12px', margin: '4px 0 0' }}>Train your agent with URLs, text, or FAQs</p>
+        </div>
+        <button onClick={() => setShowForm(!showForm)}
+          style={{ alignItems: 'center', backgroundColor: showForm ? '#FFFFFF0A' : '#7C3AED1F', border: `1px solid ${showForm ? '#FFFFFF14' : '#7C3AED33'}`, borderRadius: '8px', color: showForm ? '#8888AA' : '#A78BFA', cursor: 'pointer', display: 'flex', fontSize: '12px', fontWeight: 500, gap: '6px', padding: '7px 14px', transition: 'all 0.15s' }}
+        >
+          {showForm ? 'Cancel' : <><Plus size={13} /> Add source</>}
+        </button>
+      </div>
+
+      {showForm && (
+        <div style={{ backgroundColor: '#13131C', border: '1px solid #FFFFFF0A', borderRadius: '12px', marginBottom: '16px', padding: '16px' }}>
+          <div style={{ display: 'flex', gap: '6px', marginBottom: '14px' }}>
+            {SOURCE_TYPES.map((t) => (
+              <button key={t.value} onClick={() => setSourceType(t.value)}
+                style={{ alignItems: 'center', backgroundColor: sourceType === t.value ? '#7C3AED2E' : 'transparent', border: 'none', borderRadius: '8px', color: sourceType === t.value ? '#E2E2F0' : '#8888AA', cursor: 'pointer', display: 'flex', fontSize: '12px', fontWeight: 500, gap: '6px', padding: '6px 12px', transition: 'all 0.15s' }}
+              >
+                <t.icon size={13} /> {t.label}
+              </button>
+            ))}
+          </div>
+          {sourceType === 'url' ? (
+            <input type="url" value={content} onChange={(e) => setContent(e.target.value)} placeholder={typeInfo.placeholder}
+              style={inputStyle} onFocus={focusInput} onBlur={blurInput} />
+          ) : sourceType === 'pdf' ? (
+            <div>
+              <input ref={fileInputRef} type="file" accept=".pdf,application/pdf"
+                onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+                style={{ display: 'none' }} />
+              <button type="button" onClick={() => fileInputRef.current?.click()}
+                style={{ alignItems: 'center', backgroundColor: '#13131C', border: '1px dashed #FFFFFF26', borderRadius: '10px', color: pdfFile ? '#E2E2F0' : '#8888AA', cursor: 'pointer', display: 'flex', fontSize: '13px', gap: '10px', justifyContent: 'center', padding: '20px', width: '100%', boxSizing: 'border-box' }}>
+                <FileUp size={16} style={{ color: pdfFile ? '#A78BFA' : '#8888AA' }} />
+                {pdfFile ? pdfFile.name : 'Click to select a PDF file'}
+              </button>
+              {pdfFile && (
+                <p style={{ color: '#44445A', fontSize: '11px', margin: '6px 0 0' }}>
+                  {(pdfFile.size / 1024).toFixed(0)} KB — will be sent as base64 for processing
+                </p>
+              )}
+            </div>
+          ) : (
+            <textarea value={content} onChange={(e) => setContent(e.target.value)} placeholder={typeInfo.placeholder} rows={4}
+              style={{ ...inputStyle, resize: 'vertical', minHeight: '80px', lineHeight: '1.5' }}
+              onFocus={focusInput} onBlur={blurInput} />
+          )}
+          <button onClick={() => addMutation.mutate()} disabled={!canSubmit || addMutation.isPending}
+            style={{ alignItems: 'center', backgroundImage: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%)', border: 'none', borderRadius: '8px', boxShadow: '#7C3AED40 0px 0px 12px', color: '#FFFFFF', cursor: canSubmit && !addMutation.isPending ? 'pointer' : 'not-allowed', display: 'flex', fontSize: '13px', fontWeight: 600, gap: '6px', marginTop: '12px', opacity: canSubmit && !addMutation.isPending ? 1 : 0.5, padding: '9px 18px' }}
+          >
+            {addMutation.isPending ? (
+              <><Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> Adding…</>
+            ) : (
+              <><Plus size={13} /> Add {typeInfo.label}</>
+            )}
+          </button>
+        </div>
+      )}
+
+      {sources.length > 0 && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {sources.map((s) => {
+            const st = STATUS_CFG[s.status.toLowerCase()] ?? STATUS_CFG['pending'];
+            const iconMap: Record<string, typeof Globe> = { url: Globe, text: FileText, faq: MessageSquare };
+            const Icon = iconMap[s.type.toLowerCase()] ?? FileText;
+            return (
+              <div key={s.id} style={{ alignItems: 'center', backgroundColor: '#13131C', border: '1px solid #FFFFFF0A', borderRadius: '10px', display: 'flex', gap: '12px', padding: '12px 14px' }}>
+                <Icon size={15} style={{ color: '#8888AA', flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ color: '#E2E2F0', fontSize: '13px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {s.sourceUrl || `${s.type} content`}
+                  </div>
+                  <div style={{ color: '#44445A', fontSize: '11px', marginTop: '2px' }}>
+                    Added {new Date(s.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+                <div style={{ backgroundColor: st.bg, borderRadius: '20px', flexShrink: 0, paddingBlock: '3px', paddingInline: '8px' }}>
+                  <span style={{ color: st.color, fontSize: '10px', fontWeight: 600 }}>{st.label}</span>
+                </div>
+                <button onClick={() => deleteMutation.mutate(s.id)} disabled={deleteMutation.isPending}
+                  title="Delete source"
+                  style={{ alignItems: 'center', background: 'none', border: 'none', borderRadius: '6px', color: '#44445A', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: '4px', transition: 'color 0.15s' }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#EF4444')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = '#44445A')}
+                >
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {!showForm && sources.length === 0 && (
+        <div style={{ color: '#44445A', fontSize: '13px', paddingTop: '12px', textAlign: 'center' }}>
+          No knowledge sources yet. Add URLs or text to train your agent.
+        </div>
+      )}
     </div>
   );
 }
@@ -256,6 +421,10 @@ export default function AgentDetail() {
 
         <div style={{ marginBottom: '20px' }}>
           <EmbedCode embedToken={agent!.embedToken} agentName={agent!.name} />
+        </div>
+
+        <div style={{ marginBottom: '20px' }}>
+          <KnowledgeSources agentId={agent!.id} />
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>

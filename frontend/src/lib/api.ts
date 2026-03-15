@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:5000/api/v1';
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:5000/api/v1';
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -105,6 +105,26 @@ export const agentsApi = {
 
   remove: (id: string) =>
     apiClient.delete(`/agents/${id}`),
+};
+
+export interface KnowledgeSource {
+  id: string;
+  agentId: string;
+  type: string;
+  status: string;
+  sourceUrl: string | null;
+  createdAt: string;
+}
+
+export const knowledgeApi = {
+  list: (agentId: string) =>
+    apiClient.get<{ data: KnowledgeSource[] }>(`/agents/${agentId}/knowledge`).then(unwrap),
+
+  add: (agentId: string, payload: { type: string; content?: string; sourceUrl?: string }) =>
+    apiClient.post<{ data: KnowledgeSource }>(`/agents/${agentId}/knowledge`, payload).then(unwrap),
+
+  remove: (agentId: string, sourceId: string) =>
+    apiClient.delete(`/agents/${agentId}/knowledge/${sourceId}`),
 };
 
 export const billingApi = {

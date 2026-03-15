@@ -9,6 +9,8 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import NewAgent from './pages/NewAgent';
 import AgentDetail from './pages/AgentDetail';
+import NotFound from './pages/NotFound';
+import AuthCallback from './pages/AuthCallback';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,6 +30,7 @@ export default function App() {
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
 
           {/* Protected routes (require JWT) */}
           <Route element={<ProtectedRoute />}>
@@ -38,8 +41,8 @@ export default function App() {
             </Route>
           </Route>
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

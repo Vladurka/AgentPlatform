@@ -60,6 +60,9 @@ builder.Services.AddAuthorization();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, CurrentUser>();
 
+// HttpClient for OAuth
+builder.Services.AddHttpClient();
+
 // Register modules
 AuthModuleRegistration.RegisterModule(builder.Services, builder.Configuration);
 AgentsModuleRegistration.RegisterModule(builder.Services, builder.Configuration);
@@ -104,7 +107,11 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
+        if (allowedOrigins is { Length: > 0 })
+            policy.WithOrigins(allowedOrigins).AllowAnyMethod().AllowAnyHeader();
+        else
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
 

@@ -4,6 +4,8 @@ import asyncio
 import json
 import logging
 import base64
+import uuid
+from datetime import datetime, timezone
 
 import aio_pika
 
@@ -18,12 +20,23 @@ async def publish_status(
     source_id: str,
     status: str,
 ) -> None:
-    """Publish ingestion status update back to .NET via ingestion.status queue."""
+    """Publish ingestion status update back to .NET in MassTransit envelope format."""
     try:
-        payload = json.dumps({"SourceId": source_id, "Status": status})
+        # MassTransit expects its JSON envelope; plain JSON causes R-FAULT
+        envelope = {
+            "messageId": str(uuid.uuid4()),
+            "messageType": [
+                "urn:message:AgentPlatform.Agents.Application.Messages:IngestionStatusUpdatedEvent"
+            ],
+            "message": {
+                "sourceId": source_id,
+                "status": status,
+            },
+            "sentTime": datetime.now(timezone.utc).isoformat(),
+        }
         await publish_channel.default_exchange.publish(
             aio_pika.Message(
-                body=payload.encode(),
+                body=json.dumps(envelope).encode(),
                 content_type="application/json",
                 delivery_mode=aio_pika.DeliveryMode.PERSISTENT,
             ),
@@ -40,7 +53,14 @@ async def start_worker():
 
     consume_channel = await connection.channel()
     await consume_channel.set_qos(prefetch_count=1)
+
+    # Declare exchange (MassTransit creates it as direct)
+    exchange = await consume_channel.declare_exchange(
+        "ingestion.requests", aio_pika.ExchangeType.DIRECT, durable=True
+    )
     queue = await consume_channel.declare_queue("ingestion.requests", durable=True)
+    # Bind queue to exchange (MassTransit publishes with empty routing key for direct)
+    await queue.bind(exchange, routing_key="")
 
     publish_channel = await connection.channel()
     await publish_channel.declare_queue("ingestion.status", durable=True)
@@ -50,10 +70,14 @@ async def start_worker():
     async def on_message(message: aio_pika.abc.AbstractIncomingMessage):
         async with message.process():
             body = json.loads(message.body.decode())
-            agent_id = body["agent_id"]
-            source_id = body.get("source_id", "")
-            source_type = body["source_type"]
-            content = body["content"]
+            logger.debug(f"Raw message keys: {list(body.keys())}")
+
+            # MassTransit wraps payload in {"message": {...}} envelope with camelCase
+            payload = body.get("message", body)
+            agent_id = payload.get("agentId") or payload.get("agent_id", "")
+            source_id = payload.get("sourceId") or payload.get("source_id", "")
+            source_type = payload.get("sourceType") or payload.get("source_type", "")
+            content = payload.get("content", "")
 
             logger.info(
                 f"Processing ingestion: agent={agent_id}, "

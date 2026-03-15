@@ -63,6 +63,12 @@ public static class AgentEndpoints
             return Results.Created($"/api/v1/agents/{id}/knowledge/{result.Id}", ApiResponse<KnowledgeSourceDto>.Success(result));
         });
 
+        group.MapDelete("/{agentId:guid}/knowledge/{sourceId:guid}", async (Guid agentId, Guid sourceId, ICurrentUser currentUser, IMediator mediator) =>
+        {
+            await mediator.Send(new DeleteKnowledgeSourceCommand(sourceId, currentUser.UserId));
+            return Results.NoContent();
+        });
+
         return app;
     }
 }
