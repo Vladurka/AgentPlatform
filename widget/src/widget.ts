@@ -8,7 +8,8 @@
   const token = script?.getAttribute('data-token') ?? '';
   const agentName = script?.getAttribute('data-name') ?? 'AI Assistant';
   const agentAvatar = script?.getAttribute('data-avatar') ?? '';
-  const API_BASE = (script?.getAttribute('data-api') ?? 'https://api.agentforge.ai/api/v1').replace(/\/$/, '');
+  const scriptOrigin = script?.src ? new URL(script.src).origin : window.location.origin;
+  const API_BASE = (script?.getAttribute('data-api') ?? `${scriptOrigin}/api/v1`).replace(/\/$/, '');
 
   if (!token) {
     console.warn('[AgentForge] Missing data-token attribute.');

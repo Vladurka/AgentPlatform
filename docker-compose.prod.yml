@@ -99,10 +99,10 @@ services:
 
   frontend:
     build:
-      context: ./frontend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: frontend/Dockerfile
       args:
-        VITE_API_URL: ${FRONTEND_URL}/api/v1
+        VITE_API_URL: /api/v1
     restart: unless-stopped
     ports:
       - "80:80"
