@@ -76,7 +76,7 @@ function CopyEmbedButton({ token }: { token: string }) {
 
 function AgentCard({ agent, index }: { agent: Agent; index: number }) {
   const accent = getAccent(index);
-  const badge = getModelBadge(agent.llmModel ?? '');
+  const badge = getModelBadge(String(agent.llmModel ?? ''));
 
   return (
     <div style={{ backgroundColor: '#1E1E278C', border: '1px solid #FFFFFF12', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '14px', padding: '20px', transition: 'border-color 0.2s' }}
