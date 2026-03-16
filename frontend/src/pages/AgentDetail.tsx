@@ -328,6 +328,23 @@ export default function AgentDetail() {
     if (first) setModel(first.value);
   }
 
+  const [confirmDelete, setConfirmDelete] = useState(false);
+
+  const deleteAgentMutation = useMutation({
+    mutationFn: () => agentsApi.remove(id!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['agents'] });
+      navigate('/dashboard');
+    },
+    onError: (err: unknown) => {
+      const msg =
+        (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+        'Failed to delete agent.';
+      setError(msg);
+      setConfirmDelete(false);
+    },
+  });
+
   const updateMutation = useMutation({
     mutationFn: () =>
       agentsApi.update(id!, {
@@ -413,6 +430,29 @@ export default function AgentDetail() {
           <h1 style={{ color: '#E2E2F0', fontSize: '26px', fontWeight: 700, letterSpacing: '-0.5px', margin: 0 }}>{agent!.name}</h1>
           <div style={{ backgroundColor: sc.bg, border: `1px solid ${sc.border}`, borderRadius: '20px', paddingBlock: '3px', paddingInline: '10px' }}>
             <span style={{ color: sc.color, fontSize: '11px', fontWeight: 600 }}>{agent!.status}</span>
+          </div>
+          <div style={{ marginLeft: 'auto' }}>
+            {confirmDelete ? (
+              <div style={{ alignItems: 'center', display: 'flex', gap: '8px' }}>
+                <span style={{ color: '#FCA5A5', fontSize: '13px' }}>Delete agent?</span>
+                <button onClick={() => deleteAgentMutation.mutate()} disabled={deleteAgentMutation.isPending}
+                  style={{ alignItems: 'center', backgroundColor: '#EF4444', border: 'none', borderRadius: '7px', color: '#FFF', cursor: 'pointer', display: 'flex', fontSize: '12px', fontWeight: 600, gap: '4px', padding: '6px 12px', opacity: deleteAgentMutation.isPending ? 0.6 : 1 }}>
+                  {deleteAgentMutation.isPending ? 'Deleting…' : 'Yes, delete'}
+                </button>
+                <button onClick={() => setConfirmDelete(false)}
+                  style={{ background: 'none', border: 'none', color: '#8888AA', cursor: 'pointer', fontSize: '12px', padding: '6px 10px' }}>
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setConfirmDelete(true)}
+                style={{ alignItems: 'center', background: 'none', border: '1px solid #FFFFFF14', borderRadius: '8px', color: '#8888AA', cursor: 'pointer', display: 'flex', fontSize: '12px', gap: '6px', padding: '6px 12px', transition: 'all 0.15s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = '#EF444440'; e.currentTarget.style.color = '#EF4444'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = '#FFFFFF14'; e.currentTarget.style.color = '#8888AA'; }}
+              >
+                <Trash2 size={13} /> Delete agent
+              </button>
+            )}
           </div>
         </div>
         <p style={{ color: '#8888AA', fontSize: '13px', margin: '0 0 32px' }}>

@@ -19,6 +19,8 @@ public class AgentsModuleRegistration : IModuleRegistration
         services.AddScoped<IKnowledgeSourceRepository, KnowledgeSourceRepository>();
         services.AddSingleton<IEncryptionService, AesEncryptionService>();
 
+        services.AddHttpClient<IAgentCleanupService, AgentCleanupService>();
+
         return services;
     }
 }

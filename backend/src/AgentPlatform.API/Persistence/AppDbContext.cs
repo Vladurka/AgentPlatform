@@ -60,6 +60,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             e.HasKey(x => x.Id);
             e.HasIndex(x => x.SessionId).IsUnique();
             e.HasIndex(x => x.AgentId);
+            e.HasOne<Agent>().WithMany().HasForeignKey(x => x.AgentId).OnDelete(DeleteBehavior.Cascade);
             e.Property(x => x.SessionId).HasMaxLength(64).IsRequired();
             e.OwnsMany(x => x.Messages, m =>
             {
