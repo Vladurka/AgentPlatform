@@ -79,7 +79,7 @@ public static class ChatEndpoints
                 new SendMessageCommand(agentId, instructions, llmProvider, llmModel, apiKey, request.Message, request.SessionId), ct);
 
             return Results.Ok(ApiResponse<ChatResponse>.Success(result));
-        }).AllowAnonymous();
+        }).AllowAnonymous().RequireCors("WidgetPolicy");
 
         return app;
     }

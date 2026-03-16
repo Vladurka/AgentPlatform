@@ -109,10 +109,14 @@ builder.Services.AddCors(options =>
     {
         var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>();
         if (allowedOrigins is { Length: > 0 })
-            policy.WithOrigins(allowedOrigins).AllowAnyMethod().AllowAnyHeader();
+            policy.WithOrigins(allowedOrigins).AllowAnyMethod().AllowAnyHeader().AllowCredentials();
         else
             policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
+
+    // Widget chat endpoint can be embedded on any origin — no credentials needed
+    options.AddPolicy("WidgetPolicy", policy =>
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
 
 builder.Services.ConfigureHttpJsonOptions(options =>
