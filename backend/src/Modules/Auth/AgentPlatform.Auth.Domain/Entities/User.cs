@@ -12,4 +12,5 @@ public class User : BaseEntity
     public DateTime? RefreshTokenExpiryTime { get; set; }
     public string? StripeCustomerId { get; set; }
     public string? StripeSubscriptionId { get; set; }
+    public bool IsAdmin { get; set; } = false;
 }

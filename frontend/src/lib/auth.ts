@@ -10,8 +10,24 @@ interface AuthState {
 
 const TOKEN_KEY = 'token';
 
+function getValidToken(): string | null {
+  const token = localStorage.getItem(TOKEN_KEY);
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    if (payload.exp && payload.exp * 1000 < Date.now()) {
+      localStorage.removeItem(TOKEN_KEY);
+      return null;
+    }
+  } catch {
+    localStorage.removeItem(TOKEN_KEY);
+    return null;
+  }
+  return token;
+}
+
 export const useAuthStore = create<AuthState>((set) => ({
-  token: localStorage.getItem(TOKEN_KEY),
+  token: getValidToken(),
   user: null,
 
   setAuth: (token, user) => {

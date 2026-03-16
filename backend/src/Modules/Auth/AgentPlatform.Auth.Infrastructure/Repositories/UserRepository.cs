@@ -15,4 +15,7 @@ public class UserRepository(DbContext context) : BaseRepository<User>(context), 
 
     public async Task<bool> ExistsAsync(string email, CancellationToken ct = default)
         => await DbSet.AnyAsync(u => u.Email == email, ct);
+
+    public async Task<IReadOnlyList<User>> GetAllAsync(CancellationToken ct = default)
+        => await DbSet.OrderBy(u => u.CreatedAt).ToListAsync(ct);
 }

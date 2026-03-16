@@ -12,6 +12,6 @@ public class GetMeQueryHandler(IUserRepository userRepository)
         var user = await userRepository.GetByIdAsync(request.UserId, ct)
             ?? throw new KeyNotFoundException("User not found.");
 
-        return new UserDto(user.Id, user.Email, user.Plan, user.CreatedAt);
+        return new UserDto(user.Id, user.Email, user.Plan, user.IsAdmin, user.CreatedAt);
     }
 }

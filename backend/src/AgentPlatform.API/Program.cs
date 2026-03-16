@@ -54,7 +54,12 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 });
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy =>
+        policy.RequireAssertion(ctx =>
+            ctx.User.FindFirst("is_admin")?.Value == "true"));
+});
 
 // CurrentUser
 builder.Services.AddHttpContextAccessor();
@@ -146,6 +151,7 @@ app.UseAuthorization();
 
 // Map module endpoints
 app.MapAuthEndpoints();
+app.MapAdminEndpoints();
 app.MapAgentEndpoints();
 app.MapChatEndpoints();
 app.MapBillingEndpoints();

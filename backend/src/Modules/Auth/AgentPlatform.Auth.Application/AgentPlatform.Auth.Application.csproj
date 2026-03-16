@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="..\AgentPlatform.Auth.Domain\AgentPlatform.Auth.Domain.csproj" />
     <ProjectReference Include="..\..\..\AgentPlatform.Shared\AgentPlatform.Shared.csproj" />
+    <ProjectReference Include="..\..\Agents\AgentPlatform.Agents.Application\AgentPlatform.Agents.Application.csproj" />
   </ItemGroup>
 
   <PropertyGroup>

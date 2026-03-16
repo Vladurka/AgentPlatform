@@ -16,12 +16,34 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+// On 401 — clear token and redirect to login
+apiClient.interceptors.response.use(
+  (r) => r,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface User {
   id: string;
   email: string;
   plan: string;
+  isAdmin: boolean;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  plan: string;
+  isAdmin: boolean;
+  agentCount: number;
+  createdAt: string;
 }
 
 export interface AuthResponse {
@@ -91,6 +113,13 @@ export const authApi = {
 
   me: () =>
     apiClient.get<{ data: User }>('/auth/me').then(unwrap),
+};
+
+export const adminApi = {
+  users: () =>
+    apiClient.get<{ data: AdminUser[] }>('/admin/users').then(unwrap),
+  updatePlan: (userId: string, plan: string) =>
+    apiClient.put(`/admin/users/${userId}/plan`, { plan }),
 };
 
 export const agentsApi = {

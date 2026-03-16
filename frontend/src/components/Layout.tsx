@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Bot, LayoutDashboard, Plus, LogOut, Zap } from 'lucide-react';
+import { Bot, LayoutDashboard, Plus, LogOut, Zap, ShieldCheck } from 'lucide-react';
 import clsx from 'clsx';
 import { useAuthStore } from '../lib/auth';
 import { billingApi, authApi } from '../lib/api';
@@ -89,6 +89,22 @@ export default function Layout() {
             <Plus size={16} />
             New Agent
           </NavLink>
+          {user?.isAdmin && (
+            <NavLink
+              to="/admin"
+              className={({ isActive }) =>
+                clsx(
+                  'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors',
+                  isActive
+                    ? 'bg-violet-600 text-white'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
+                )
+              }
+            >
+              <ShieldCheck size={16} />
+              Admin
+            </NavLink>
+          )}
         </nav>
 
         {/* Usage + User */}

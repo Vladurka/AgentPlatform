@@ -11,6 +11,7 @@ import NewAgent from './pages/NewAgent';
 import AgentDetail from './pages/AgentDetail';
 import NotFound from './pages/NotFound';
 import AuthCallback from './pages/AuthCallback';
+import Admin from './pages/Admin';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -38,6 +39,7 @@ export default function App() {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/agents/new" element={<NewAgent />} />
               <Route path="/agents/:id" element={<AgentDetail />} />
+              <Route path="/admin" element={<Admin />} />
             </Route>
           </Route>
 
