@@ -14,10 +14,26 @@ const PLAN_COLORS: Record<string, { color: string; bg: string }> = {
 };
 
 export default function Admin() {
-  const user = useAuthStore((s) => s.user);
+  const { token, user } = useAuthStore();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  const { isLoading: userLoading } = useQuery({
+    queryKey: ['me'],
+    queryFn: () => import('../lib/api').then((m) => m.authApi.me()),
+    enabled: !!token && !user,
+    staleTime: Infinity,
+  });
+
+  if (userLoading || (!user && token)) {
+    return (
+      <div style={{ alignItems: 'center', color: '#8888AA', display: 'flex', fontFamily: '"Inter", system-ui, sans-serif', gap: '10px', justifyContent: 'center', minHeight: '100%' }}>
+        <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
 
   if (!user?.isAdmin) {
     navigate('/dashboard', { replace: true });
