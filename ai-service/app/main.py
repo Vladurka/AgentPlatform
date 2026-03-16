@@ -17,9 +17,19 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _worker_done_callback(task: asyncio.Task) -> None:
+    try:
+        exc = task.exception()
+        if exc:
+            logger.error("Ingestion worker crashed: %s", exc, exc_info=exc)
+    except asyncio.CancelledError:
+        pass
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     task = asyncio.create_task(start_worker())
+    task.add_done_callback(_worker_done_callback)
     logger.info("Ingestion worker task created")
     yield
     task.cancel()

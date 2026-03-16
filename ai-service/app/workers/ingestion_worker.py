@@ -49,7 +49,17 @@ async def publish_status(
 
 async def start_worker():
     logger.info("Starting ingestion worker...")
-    connection = await aio_pika.connect_robust(settings.rabbitmq_url)
+    # Retry connecting — RabbitMQ may not be fully ready yet
+    for attempt in range(10):
+        try:
+            connection = await aio_pika.connect_robust(settings.rabbitmq_url)
+            break
+        except Exception as exc:
+            logger.warning("RabbitMQ not ready (attempt %d/10): %s", attempt + 1, exc)
+            await asyncio.sleep(3)
+    else:
+        logger.error("Could not connect to RabbitMQ after 10 attempts")
+        return
 
     consume_channel = await connection.channel()
     await consume_channel.set_qos(prefetch_count=1)
