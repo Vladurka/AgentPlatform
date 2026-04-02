@@ -26,6 +26,9 @@ services:
       - "traefik.http.routers.dashboard.service=api@internal"
       - "traefik.http.routers.dashboard.middlewares=auth"
       - "traefik.http.middlewares.auth.basicauth.users=${TRAEFIK_DASHBOARD_AUTH}"
+    networks:
+      - traefik-public
+      - default
 
   postgres:
     image: postgres:16-alpine
@@ -151,3 +154,7 @@ volumes:
   rabbitmq_data:
   qdrant_data:
   letsencrypt:
+
+networks:
+  traefik-public:
+    external: true
